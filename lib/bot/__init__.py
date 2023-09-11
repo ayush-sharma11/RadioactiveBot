@@ -1,4 +1,4 @@
-from discord.ext.commands import Bot as BotBase
+from discord.ext.commands import Bot as BotBase, CommandNotFound
 from discord import Intents, Embed, File
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime
@@ -35,10 +35,34 @@ class Bot(BotBase):
     async def on_disconnect(self):
         print("bot disconnected")
 
+    async def on_error(self, error, *args, **kwargs):
+        if error == "on_command_error":
+            await args[0].send("Something went wrong.")
+            # passes this string on command error
+            # first element of the args will be the one we can send message back to
+        
+        debug_channel = self.get_channel(1146436184181051452)
+        await debug_channel.send("An error occured.")
+
+        raise
+        # it re raises the error
+
+    async def on_command_error(self, ctx, exception):
+        if isinstance(exception, CommandNotFound):
+            # checks whether the first argument is an instance of the second argument
+            pass
+        
+        elif hasattr(exception, "original"):
+            # checks if exception has an attribute called original
+            raise exception.original
+
+        else:
+            raise exception
+
     async def on_ready(self):
         if not self.ready:
             self.ready = True
-            # self.guild = self.get_guild(853328693481308210) only is single server bot
+            # self.guild = self.get_guild(guild_number) only is single server bot
             print("bot ready")
 
             debug_channel = self.get_channel(1146436184181051452)

@@ -1,5 +1,5 @@
-# custom addes
-"lib\bot\token.0"
+# custom added
+"lib\\bot\\token.0"
 *.db
 *.db-journal
 __pycache__
