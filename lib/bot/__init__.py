@@ -4,6 +4,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime
 import version
 
+from ..db import db
+
 PREFIX = "rb "
 OWNER_IDS  = [622126341344460812]
 VERSION = version.VERSION
@@ -14,6 +16,8 @@ class Bot(BotBase):
         self.ready = False
         self.guild = None
         self.scheduler = AsyncIOScheduler()
+
+        db.autosave()
 
         super().__init__(command_prefix=PREFIX,
                          owner_ids=OWNER_IDS,
@@ -63,7 +67,8 @@ class Bot(BotBase):
         if not self.ready:
             self.ready = True
             # self.guild = self.get_guild(guild_number) only is single server bot
-            print("bot ready")
+
+            self.scheduler.start()
 
             debug_channel = self.get_channel(1146436184181051452)
             embed = Embed(
@@ -89,6 +94,8 @@ class Bot(BotBase):
             embed.set_thumbnail(url="attachment://radioactive.png")
             
             await debug_channel.send(file=file, embed=embed)
+
+            print("bot ready")
         
         else:
             print("bot reconnected")
