@@ -1,6 +1,7 @@
 from discord.ext.commands import Bot as BotBase, CommandNotFound
 from discord import Intents, Embed, File
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime
 import version
 
@@ -9,6 +10,7 @@ from ..db import db
 PREFIX = "rb "
 OWNER_IDS  = [622126341344460812]
 VERSION = version.VERSION
+DEBUG_CHANNEL = 1146436184181051452
 
 class Bot(BotBase):
     def __init__(self):
@@ -17,7 +19,7 @@ class Bot(BotBase):
         self.guild = None
         self.scheduler = AsyncIOScheduler()
 
-        db.autosave()
+        db.autosave(self.scheduler)
 
         super().__init__(command_prefix=PREFIX,
                          owner_ids=OWNER_IDS,
@@ -32,6 +34,32 @@ class Bot(BotBase):
         
         print("running bot...")
         super().run(self.TOKEN, reconnect=True)
+    
+    async def print_message(self):
+        pass
+
+    async def start_embed(self):
+        embed = Embed(
+                title = "Start Message",
+                description = "Radiactive Bot is online!",
+                color = 0xFFFF00,
+                timestamp = datetime.utcnow()
+            )
+
+        fields = [("Enjoy using the bot!", "Remember to adhere to Discord rules!", False)] # it wont be inline
+        for name, value, inline in fields:
+            embed.add_field(name = name, value = value, inline  = inline)
+
+        file = File("data/images/radioactive.png")
+
+        embed.set_author(
+            name = "Radioactive Bot",
+            icon_url = "attachment://data/images/radioactive.png"  # bot cover image
+        )
+        embed.set_footer(text=f"Radioactive Bot | version {VERSION}")
+        embed.set_thumbnail(url="attachment://radioactive.png")
+        debug_channel = self.get_channel(DEBUG_CHANNEL)
+        await debug_channel.send(file=file, embed=embed)
 
     async def on_connect(self):
         print("bot connected")
@@ -69,32 +97,7 @@ class Bot(BotBase):
             # self.guild = self.get_guild(guild_number) only is single server bot
 
             self.scheduler.start()
-
-            debug_channel = self.get_channel(1146436184181051452)
-            embed = Embed(
-                title = "Start Message",
-                description = "Radiactive Bot is online!",
-                color = 0xFFFF00,
-                timestamp = datetime.utcnow()
-            )
-
-            fields = [("Enjoy using the bot!", "Remember to adhere to Discord rules!", False)] # it wont be inline
-            for name, value, inline in fields:
-                embed.add_field(name = name, value = value, inline  = inline)
-
-            file = File("radioactive.png")
-
-            embed.set_author(
-                name = "Radioactive Bot",
-                icon_url = "attachment://radioactive.png"  # bot cover image
-            )
-
-            embed.set_footer(text=f"Radioactive Bot | version {VERSION}")
-
-            embed.set_thumbnail(url="attachment://radioactive.png")
-            
-            await debug_channel.send(file=file, embed=embed)
-
+            await self.start_embed()
             print("bot ready")
         
         else:
